@@ -1,17 +1,25 @@
 //interface elements
+const calculatorSection = document.querySelector('.calculator');
 const numberButtons = document.querySelectorAll('.number-button');
 const clearButton = document.getElementById('clear-button');
 const clearAllButton = document.getElementById('clear-all-button');
 const displayDiv = document.getElementById('display');
 const operationButtons = document.querySelectorAll('.operation-button');
 const equalButton = document.getElementById('equal-button');
+const toOperationsRecordSectionButton = document.getElementById('history-button');
+const operationsRecordSection = document.querySelector('.operations-history-container');
+const toCalcButton = document.getElementById('to-calc-button');
+const operationsContainer = document.getElementById('operations-container');
 
 //classes
 class Calculator {
-	constructor(displayElement, maxCharacters) {
+	constructor(displayElement, maxCharacters, calculatorSection, operationsRecordSection, operationsContainer) {
 		this.possibleOperations = [ '+', '-', 'x', '/' ];
 		this.display = displayElement;
 		this.maxCharacters = maxCharacters;
+		this.calculatorSection = calculatorSection;
+		this.operationsRecordSection = operationsRecordSection;
+		this.operationsContainer = operationsContainer;
 	}
 	get itsPossibleToAddOperation() {
 		let lastTermComponent = this.display.lastElementChild.lastElementChild.textContent;
@@ -86,6 +94,7 @@ class Calculator {
 	}
 	get operation() {
 		//devuelve array compuesto por arrays que representan los términos y dentro suyo los componentes
+		//implica que haya en el display una operación estructurada en terminos(divs) y componentes(hijos de esos divs)
 		let operation = [];
 		let terminos = [ ...document.querySelectorAll('.termino') ];
 
@@ -101,6 +110,7 @@ class Calculator {
 	}
 	get reducedOperation() {
 		//devuelve array compuesto de nros que representan los terminos resueltos
+		//implica poder acceder a this.operation
 		let reducedOperation = [];
 		this.operation.forEach((term) => {
 			let reducedTerm;
@@ -125,22 +135,84 @@ class Calculator {
 		});
 		return reducedOperation;
 	}
-	resolveOperation() {
-		//mostrar en display el resultado  de la operación
+	get result() {
+		//implica tener acceso a la operación reducida
 		let result = this.reducedOperation.reduce((total, current) => {
 			return total + current;
 		});
+		if (Calculator.numberLength(result) >= this.maxCharacters) {
+			result = 'error';
+		}
+		return result;
+	}
+	showResultInDisplay() {
+		let result = this.result; //lo llamo antes de borrar los caracteres del display ya que hace uso de los mismos
 		this.eraseAllCharacters();
 		this.display.firstElementChild.firstElementChild.textContent = `${result}`;
 	}
-	showMathError() {
-		this.eraseAllCharacters();
-		this.display.firstElementChild.firstElementChild.textContent = 'Math Error';
+	static numberLength(number) {
+		let numberLength = number.toString().length - 1;
+		return numberLength;
+	}
+	changeSection(from, to) {
+		from.classList.add('fade-out-bottom');
+		from.addEventListener('animationend', () => {
+			to.classList.remove('hide');
+			from.classList.replace('fade-out-bottom', 'hide');
+		});
+	}
+	saveOperationAndResult() {
+		//guardar en sessionStorage operación y resultado con horario de guardado
+		//debe llamarse antes de borrar la operación del display
+		let dateInstance = new Date();
+		let hours = dateInstance.getHours();
+		let minutes = dateInstance.getMinutes();
+		let seconds = dateInstance.getSeconds();
+		let time = `${hours}${minutes}.${seconds}`;
+		let result = this.result.toString();
+		let operation = '';
+		this.operation.forEach((term) => {
+			operation += term.join('');
+		});
+		sessionStorage.setItem(`${operation}`, JSON.stringify({ result, time }));
+	}
+	showSavedDataInOperationsRecordSection() {
+		//mostrar en el operations-container las últimas 11 operaciones
+		this.operationsContainer.innerHTML = '';
+		let elements = [];
+		for (let i = 0; i < sessionStorage.length; i++) {
+			let operation = sessionStorage.key(i);
+			let data = JSON.parse(sessionStorage.getItem(operation));
+			let div = document.createElement('div');
+			div.className = 'operation';
+			div.innerHTML = `<p>${operation}</p><p>${data.result}</p>`;
+			div.id = `${data.time}`;
+			elements.push(div);
+		}
+		elements.sort((a, b) => {
+			//se ordenan de mayor a menor según su tiempo de guardado(seteado en el id de cada elemento)
+			return parseFloat(b.id) - parseFloat(a.id);
+		});
+
+		while (elements.length >= 12) {
+			//elimino las operaciones más viejas hasta quedarme con las 11 más recientes
+			elements.pop();
+		}
+		elements.forEach((element) => {
+			this.operationsContainer.appendChild(element);
+		});
+	}
+	get existOperationSaved() {
+		if (sessionStorage.length >= 1) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 }
 
 //class instance
-const calculator = new Calculator(displayDiv, 10);
+const calculator = new Calculator(displayDiv, 10, calculatorSection, operationsRecordSection, operationsContainer);
 
 //DOM Events
 
@@ -175,6 +247,18 @@ equalButton.addEventListener('click', () => {
 	if (calculator.itsPossibleToAddOperation == false) {
 		return;
 	} else {
-		calculator.resolveOperation();
+		calculator.saveOperationAndResult();
+		calculator.showResultInDisplay(); //implica borrar la operación del display, por eso se llama después de guardar la operación
 	}
+});
+
+toOperationsRecordSectionButton.addEventListener('click', () => {
+	if (calculator.existOperationSaved) {
+		calculator.showSavedDataInOperationsRecordSection();
+		calculator.changeSection(calculator.calculatorSection, calculator.operationsRecordSection);
+	}
+});
+
+toCalcButton.addEventListener('click', () => {
+	calculator.changeSection(calculator.operationsRecordSection, calculator.calculatorSection);
 });

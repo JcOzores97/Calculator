@@ -4,10 +4,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css?family=Rubik&display=swap" rel="stylesheet"> 
+    <link href="https://fonts.googleapis.com/css?family=Baloo+2&display=swap" rel="stylesheet"> 
     <title>Web Calculator</title>
 </head>
 <body>
-    <div id="calculator">
+    <div class="calculator">
         <div id="display">
             <div class="termino">
                 <div class="componente"></div>
@@ -15,6 +16,7 @@
         </div>
         <button id="clear-button">C</button>
         <button id="clear-all-button">CA</button>
+        <button id="history-button">Hist</button>
         <button class="number-button" id="7">7</button>
         <button class="number-button" id="8">8</button>
         <button class="number-button" id="9">9</button>
@@ -31,6 +33,12 @@
         <button class="number-button" id="0">0</button>
         <button id="equal-button">=</button>
         <button class="operation-button" id="subtract-button">-</button>       
+    </div>
+    <div class="operations-history-container hide" >
+        <header id="operations-history-header"> <p>Historial</p> <button id="to-calc-button">>></button></header>
+        <div id="operations-history-sub"><p>Operación</p> <p>Resultado</p></div>
+        <div id="operations-container">
+        </div>
     </div>
     <script  src="main.js"></script>  
 </body>
