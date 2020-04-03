@@ -14,9 +14,9 @@ Esta calculadora permite:
 
 ## Screenshots
 
-![Imagen de Calculadora ](img\Captura.PNG)
+![Imagen de Calculadora ](img/Captura.PNG)
 
-![Imagen de Historial ](img\CapturaHist.PNG)
+![Imagen de Historial ](img/CapturaHist.PNG)
 
 ## Desafios
 
