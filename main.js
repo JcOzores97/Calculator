@@ -10,6 +10,7 @@ const toOperationsRecordSectionButton = document.getElementById('history-button'
 const operationsRecordSection = document.querySelector('.operations-history-container');
 const toCalcButton = document.getElementById('to-calc-button');
 const operationsContainer = document.getElementById('operations-container');
+const decimalButton = document.getElementById('decimal-button');
 
 //classes
 class Calculator {
@@ -27,7 +28,8 @@ class Calculator {
 			lastTermComponent[lastTermComponent.length - 1]
 		);
 		let firstCharacterDoesntExist = this.display.firstElementChild.firstElementChild.textContent.length == 0;
-		if (lastCharacterIsAnOperation || firstCharacterDoesntExist) {
+		let lastCharacterIsADecimalPoint = lastTermComponent.indexOf('.') == lastTermComponent.length - 1;
+		if (lastCharacterIsAnOperation || firstCharacterDoesntExist || lastCharacterIsADecimalPoint) {
 			return false;
 		} else {
 			return true;
@@ -116,17 +118,17 @@ class Calculator {
 			let reducedTerm;
 			if (term.length == 1) {
 				//si el termino tiene un componente...
-				reducedTerm = parseInt(term.join(''));
+				reducedTerm = parseFloat(term.join(''));
 			} else {
 				reducedTerm = term.reduce((prev, current) => {
-					let prevNum = parseInt(prev);
+					let prevNum = parseFloat(prev);
 					if (current.includes('x')) {
 						let splitted = current.split('x'); //devuelve array así que hay que pasar a str con .join
-						let currentNum = parseInt(splitted.join(''));
+						let currentNum = parseFloat(splitted.join(''));
 						return prevNum * currentNum;
 					} else if (current.includes('/')) {
 						let splitted = current.split('/');
-						let currentNum = parseInt(splitted.join(''));
+						let currentNum = parseFloat(splitted.join(''));
 						return prevNum / currentNum;
 					}
 				});
@@ -140,9 +142,11 @@ class Calculator {
 		let result = this.reducedOperation.reduce((total, current) => {
 			return total + current;
 		});
+		result = parseFloat(result.toFixed(10));
 		if (Calculator.numberLength(result) >= this.maxCharacters) {
 			result = 'error';
 		}
+
 		return result;
 	}
 	showResultInDisplay() {
@@ -151,7 +155,7 @@ class Calculator {
 		this.display.firstElementChild.firstElementChild.textContent = `${result}`;
 	}
 	static numberLength(number) {
-		let numberLength = number.toString().length - 1;
+		let numberLength = number.toString().length;
 		return numberLength;
 	}
 	changeSection(from, to) {
@@ -212,7 +216,7 @@ class Calculator {
 }
 
 //class instance
-const calculator = new Calculator(displayDiv, 10, calculatorSection, operationsRecordSection, operationsContainer);
+const calculator = new Calculator(displayDiv, 11, calculatorSection, operationsRecordSection, operationsContainer);
 
 //DOM Events
 
@@ -261,4 +265,13 @@ toOperationsRecordSectionButton.addEventListener('click', () => {
 
 toCalcButton.addEventListener('click', () => {
 	calculator.changeSection(calculator.operationsRecordSection, calculator.calculatorSection);
+});
+
+decimalButton.addEventListener('click', () => {
+	if (calculator.maxCharacters == calculator.displayTotalCharacters) {
+		return;
+	}
+	if (calculator.itsPossibleToAddOperation) {
+		calculator.addCharacter('.');
+	}
 });
