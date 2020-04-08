@@ -166,44 +166,34 @@ class Calculator {
 		});
 	}
 	saveOperationAndResult() {
-		//guardar en sessionStorage operación y resultado con horario de guardado
+		//guardar en sessionStorage operación y resultado
 		//debe llamarse antes de borrar la operación del display
-		let dateInstance = new Date();
-		let hours = dateInstance.getHours();
-		let minutes = dateInstance.getMinutes();
-		let seconds = dateInstance.getSeconds();
-		let time = `${hours}${minutes}.${seconds}`;
 		let result = this.result.toString();
 		let operation = '';
 		this.operation.forEach((term) => {
 			operation += term.join('');
 		});
-		sessionStorage.setItem(`${operation}`, JSON.stringify({ result, time }));
+		let newData = { result, operation };
+		let dataArr = JSON.parse(sessionStorage.getItem('calcData'));
+		if (dataArr == null) {
+			sessionStorage.setItem('calcData', JSON.stringify([ newData ]));
+			return;
+		}
+		if (dataArr.length == 11) {
+			dataArr.pop();
+		}
+		dataArr.unshift(newData);
+		sessionStorage.setItem(`calcData`, JSON.stringify(dataArr));
 	}
 	showSavedDataInOperationsRecordSection() {
 		//mostrar en el operations-container las últimas 11 operaciones
 		this.operationsContainer.innerHTML = '';
-		let elements = [];
-		for (let i = 0; i < sessionStorage.length; i++) {
-			let operation = sessionStorage.key(i);
-			let data = JSON.parse(sessionStorage.getItem(operation));
+		let data = JSON.parse(sessionStorage.getItem('calcData'));
+		data.forEach((obj) => {
 			let div = document.createElement('div');
 			div.className = 'operation';
-			div.innerHTML = `<p>${operation}</p><p>${data.result}</p>`;
-			div.id = `${data.time}`;
-			elements.push(div);
-		}
-		elements.sort((a, b) => {
-			//se ordenan de mayor a menor según su tiempo de guardado(seteado en el id de cada elemento)
-			return parseFloat(b.id) - parseFloat(a.id);
-		});
-
-		while (elements.length >= 12) {
-			//elimino las operaciones más viejas hasta quedarme con las 11 más recientes
-			elements.pop();
-		}
-		elements.forEach((element) => {
-			this.operationsContainer.appendChild(element);
+			div.innerHTML = `<p>${obj.operation}</p><p>${obj.result}</p>`;
+			this.operationsContainer.appendChild(div);
 		});
 	}
 	get existOperationSaved() {
